@@ -1,12 +1,46 @@
-version: '3.8'
+#version: '3.8'
+#
+#services:
+#  minio:
+#    image: minio/minio
+#    container_name: minio
+#    ports:
+#      - "9000:9000"   # API access
+#      - "9001:9001"   # Web UI
+#    environment:
+#      MINIO_ROOT_USER: admin
+#      MINIO_ROOT_PASSWORD: password123
+#    command: server /data --console-address ":9001"
+#    volumes:
+#      - minio-data:/data
+#
+#  spark:
+#    build:
+#      context: ./spark
+#    container_name: spark
+#    depends_on:
+#      - minio
+#    environment:
+#      - AWS_ACCESS_KEY_ID=admin
+#      - AWS_SECRET_ACCESS_KEY=password123
+#    volumes:
+#      - ./spark/app:/app
+#      - ./config:/opt/spark/conf
+#      - ./data:/data
+#      - ./jars:/opt/spark/jars   # <-- mount local jars here
+#    command: [ "spark-submit", "--master", "local[*]", "/app/spark_minio_upload.py" ]
+#
+#
+#volumes:
+#  minio-data:
 
 services:
   minio:
     image: minio/minio
     container_name: minio
     ports:
-      - "9000:9000"    # API access
-      - "9001:9001"    # Web UI
+      - "9000:9000"   # API access
+      - "9001:9001"   # Web UI
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
@@ -14,5 +48,31 @@ services:
     volumes:
       - minio-data:/data
 
+  spark:
+    build:
+      context: ./spark
+    container_name: spark
+    depends_on:
+      - minio
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password123
+    volumes:
+      - ./spark/app:/app
+      - ./config:/opt/spark/conf
+      - ./data:/data
+      - ./jars:/opt/spark/jars
+    command: >
+      bash -c "
+      echo '⏳ Waiting for MinIO to start...';
+      sleep 10;
+      echo '🚀 Running Spark job';
+      spark-submit --master local[*] /app/spark_minio_test.py;
+      echo '✅ Spark job finished';
+      tail -f /dev/null
+      "
+    tty: true
+
 volumes:
   minio-data:
+

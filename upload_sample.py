@@ -5,7 +5,7 @@ import os
 endpoint = "http://localhost:9000"
 access_key = "admin"
 secret_key = "password123"
-bucket_name = "my-datalake"
+bucket_name = "my_datalake"
 
 # Connect to MinIO
 s3 = boto3.client(
